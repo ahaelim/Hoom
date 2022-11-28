@@ -26,8 +26,22 @@ const handleListen = () => console.log(`Listening on http://localhost:3000`);
 // => 나의 http 서버에 접근 하려는 것
 // 필수는 아님, WebSocket만 만들어도 됨
 // 우리의 서버를 만들어(보이게 노출시킴), http 서버위에 ws서버를 만들기 위함
+// http를 사용한 이유 : views, static files, home, redirection 사용하려고
 // => localhost는 동일한 포트에서 http, ws request 두개 다 처리 가능
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+// callback으로 socket을 받음 => socket : 연결된 어떤 사람, 연결된 브라우저와의 연결 라인
+// socket을 사용해 메세지 주고받기 가능 => socket을 어딘가에 저장해야함
+
+// connection이 생기면 socket을 받음
+wss.on("connection", (socket) => {
+  console.log("Connected to Browser ✔");
+  socket.on("close", () => console.log("Disconnected form Browser ❌"));
+  socket.on("message", (message) => {
+    console.log(message.toString("utf8"));
+  });
+  socket.send("hello!!"); // socket으로 데이터 보내기
+});
 
 server.listen(3000, handleListen);

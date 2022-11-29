@@ -1,3 +1,5 @@
+const messageList = document.querySelector("ul");
+const messageForm = document.querySelector("form");
 const socket = new WebSocket(`ws://${window.location.host}`);
 
 // socket이 오픈 됐을 때 발생
@@ -15,6 +17,13 @@ socket.addEventListener("close", () => {
   console.log("Disconnected form Server ❌");
 });
 
-setTimeout(() => {
-  socket.send("hello from the browser!");
-}, 1000);
+// setTimeout(() => {
+//   socket.send("hello from the browser!");
+// }, 1000);
+
+function handleSubmit(event) {
+  event.preventDefault();
+  const input = messageForm.querySelector("input");
+  console.log(input.value);
+}
+messageForm.addEventListener("submit", handleSubmit);

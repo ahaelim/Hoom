@@ -1,6 +1,7 @@
 import http from "http";
 import WebSocket from "ws";
 import express from "express";
+import { parse } from "path";
 // 여기서 express로는 views를 설정하고 render해주기만 함
 // 나머지는 웹소켓에서 일어나게함
 // app은 console.log를 실행하고 포트 3000을  listen함 localhost:3000
@@ -34,14 +35,41 @@ const wss = new WebSocket.Server({ server });
 // callback으로 socket을 받음 => socket : 연결된 어떤 사람, 연결된 브라우저와의 연결 라인
 // socket을 사용해 메세지 주고받기 가능 => socket을 어딘가에 저장해야함
 
+// fake database 생성 => 누군가 우리 서버에 연결하면 그 연결을 넣을 데이터베이스
+// 받은 메세지를 다른 모든 socket에 전달 가능
+const sockets = [];
+
 // connection이 생기면 socket을 받음
 wss.on("connection", (socket) => {
+  sockets.push(socket);
+  socket["nickname"] = "anonymous";
   console.log("Connected to Browser ✔");
   socket.on("close", () => console.log("Disconnected form Browser ❌"));
-  socket.on("message", (message) => {
-    console.log(message.toString("utf8"));
+  socket.on("message", (msg) => {
+    const message = JSON.parse(msg);
+    switch (message.type) {
+      case "new_message":
+        sockets.forEach((aSocket) =>
+          aSocket.send(`${socket.nickname}: ${message.payload}`)
+        );
+        break;
+      case "nickname":
+        socket["nickname"] = message.payload;
+        break;
+    }
+
+    // console.log(message.toString("utf8"));
+    // socket.send(message.toString("utf8")); // socket으로 데이터 보내기
   });
-  socket.send("hello!!"); // socket으로 데이터 보내기
 });
 
 server.listen(3000, handleListen);
+
+{
+  type: "message";
+  payload: "hello everyone";
+}
+{
+  type: "nickname";
+  payload: "gooday";
+}
